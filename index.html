@@ -21,7 +21,8 @@
             <div id="reader-video"></div>
             <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:40%; border:2px dashed #f1c40f; pointer-events:none; z-index:10;"></div>
           </div>
-          <button class="btn" onclick="stopScanner()" style="margin-top:15px; background:var(--danger); color:white;">Đóng Camera</button>
+          <select id="camera-select" style="width: 100%; max-width: 300px; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); background: rgba(255,255,255,0.8); outline: none; font-family: inherit; font-size: 14px; color: var(--bg-dark);"></select>
+          <button class="btn" onclick="stopScanner()" style="margin-top:10px; background:var(--danger); color:white; width: 100%; max-width: 300px;">Đóng Camera</button>
         </div>
 
         <div id="content">
@@ -41,6 +42,7 @@
       let masterData = [];
       let lastResult = null;
       let lastTime = 0;
+      let scanCounts = {};
 
       function callGAS(action, data = {}) {
         const payload = { action: action, ...data };
@@ -171,33 +173,64 @@
         });
       }
 
-      function startScanner() {
+      async function startScanner() {
         document.getElementById('scanner-box').style.display = 'block';
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        const select = document.getElementById('camera-select');
+        
+        select.innerHTML = '';
+        videoDevices.forEach((device, index) => {
+          const option = document.createElement('option');
+          option.value = device.deviceId;
+          option.text = device.label || `Camera ${index + 1}`;
+          select.appendChild(option);
+        });
+
+        select.onchange = () => {
+          Quagga.stop();
+          initQuagga(select.value);
+        };
+
+        if(videoDevices.length > 0) {
+          initQuagga(videoDevices[videoDevices.length - 1].deviceId);
+        } else {
+          showToast('Không tìm thấy camera!', 'danger');
+        }
+      }
+
+      function initQuagga(deviceId) {
         Quagga.init({
           inputStream: {
-            name: "Live",
-            type: "LiveStream",
+            name: "Live", 
+            type: "LiveStream", 
             target: document.querySelector('#reader-video'),
-            constraints: { facingMode: "environment" }
+            constraints: { deviceId: deviceId, facingMode: "environment" }
           },
-          decoder: {
-            readers: ["ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader", "code_128_reader"]
-          }
+          decoder: { 
+            readers: ["ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader", "code_128_reader"] 
+          },
+          locate: true
         }, function(err) {
-          if (err) {
-            showToast('Lỗi mở camera!', 'danger');
-            return;
+          if (err) { 
+            showToast('Lỗi mở camera!', 'danger'); 
+            return; 
           }
           Quagga.start();
         });
 
         Quagga.onDetected(function(result) {
-          let decodedText = result.codeResult.code;
-          let now = Date.now();
-          if (decodedText !== lastResult || (now - lastTime) >= 3000) {
-            lastResult = decodedText;
-            lastTime = now;
-            onScanSuccess(decodedText);
+          let code = result.codeResult.code;
+          scanCounts[code] = (scanCounts[code] || 0) + 1;
+          
+          if (scanCounts[code] >= 3) {
+            let now = Date.now();
+            if (code !== lastResult || (now - lastTime) >= 3000) {
+              lastResult = code; 
+              lastTime = now;
+              onScanSuccess(code);
+            }
+            scanCounts = {};
           }
         });
       }
