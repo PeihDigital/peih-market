@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Peih Market</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
-      :root { --primary: #84c4a4; --primary-dark: #376a4a; --accent: #c68a6f; --bg-marble: #f5f5f5; --bg-dark: #203a2a; --danger: #e74c3c; --warning: #f1c40f; --warning-orange: #e67e22; } body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg-marble); color: var(--bg-dark); } .navbar { display: flex; justify-content: space-around; position: fixed; bottom: 0; width: 100%; background: rgba(132, 196, 164, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 15px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; } .nav-item { cursor: pointer; font-size: 14px; font-weight: 500; color: #95a5a6; display: flex; flex-direction: column; align-items: center; } .nav-item.active { color: var(--primary-dark); font-weight: 700; border-bottom: 2px solid var(--primary-dark); padding-bottom: 5px; } .container { padding: 20px; padding-bottom: 80px; } .card { background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid rgba(132, 196, 164, 0.2); } .item-card { display: flex; justify-content: space-between; align-items: center; } .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; } .btn-primary { background: var(--primary); color: white; } .btn-accent { background: var(--accent); color: white; } .price-tag { font-size: 12px; color: var(--primary-dark); border: 1px solid var(--primary-dark); padding: 2px 6px; border-radius: 4px; margin-left: 5px; } input[type="text"], input[type="date"] { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid rgba(132, 196, 164, 0.5); background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(3px); font-size: 16px; outline:none; color: var(--bg-dark); font-family: inherit; } #toast-msg { padding: 12px 20px; border-radius: 8px; font-weight: bold; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 80%; z-index: 2000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); text-align: center; color: white; } .header-logo { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; padding: 10px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(5px); border-radius: 12px; } .header-title { color: var(--primary-dark); font-weight: 700; font-size: 24px; margin: 0; }
+      :root { --primary: #84c4a4; --primary-dark: #376a4a; --accent: #c68a6f; --bg-marble: #f5f5f5; --bg-dark: #203a2a; --danger: #e74c3c; --warning: #f1c40f; --warning-orange: #e67e22; } body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg-marble); color: var(--bg-dark); } .navbar { display: flex; justify-content: space-around; position: fixed; bottom: 0; width: 100%; background: rgba(132, 196, 164, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 15px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; } .nav-item { cursor: pointer; font-size: 14px; font-weight: 500; color: #95a5a6; display: flex; flex-direction: column; align-items: center; } .nav-item.active { color: var(--primary-dark); font-weight: 700; border-bottom: 2px solid var(--primary-dark); padding-bottom: 5px; } .container { padding: 20px; padding-bottom: 80px; } .card { background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid rgba(132, 196, 164, 0.2); } .item-card { display: flex; justify-content: space-between; align-items: center; } .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; } .btn-primary { background: var(--primary); color: white; } .btn-accent { background: var(--accent); color: white; } .price-tag { font-size: 12px; color: var(--primary-dark); border: 1px solid var(--primary-dark); padding: 2px 6px; border-radius: 4px; margin-left: 5px; } input[type="text"], input[type="date"] { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid rgba(132, 196, 164, 0.5); background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(3px); font-size: 16px; outline:none; color: var(--bg-dark); font-family: inherit; } #toast-msg { padding: 12px 20px; border-radius: 8px; font-weight: bold; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 80%; z-index: 2000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); text-align: center; color: white; } .header-logo { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; padding: 10px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(5px); border-radius: 12px; } .header-title { color: var(--primary-dark); font-weight: 700; font-size: 24px; margin: 0; } #reader-video video { border-radius: 12px; object-fit: cover; }
     </style>
   </head>
   <body>
@@ -16,9 +17,9 @@
         </div>
 
         <div id="scanner-box" style="display:none; text-align:center; margin-bottom:15px;">
-          <div style="position:relative; width:100%; max-width:300px; margin:0 auto; border-radius:12px; overflow:hidden; border:2px solid var(--primary); box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-            <video id="video-preview" style="width:100%; display:block; object-fit:cover;" autoplay playsinline></video>
-            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:40%; border:2px dashed #f1c40f; box-shadow:0 0 0 4000px rgba(0,0,0,0.6); pointer-events:none;"></div>
+          <div style="position:relative; width:100%; max-width:300px; margin:0 auto; border-radius:12px; overflow:hidden; border:2px solid var(--primary); box-shadow:0 4px 12px rgba(0,0,0,0.1); background: black;">
+            <div id="reader-video" style="width:100%;"></div>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:40%; border:2px dashed #f1c40f; pointer-events:none; z-index:10;"></div>
           </div>
           <button class="btn" onclick="stopScanner()" style="margin-top:15px; background:var(--danger); color:white;">Đóng Camera</button>
         </div>
@@ -38,15 +39,9 @@
     <script>
       const API_URL = 'https://script.google.com/macros/s/AKfycbz87dwQ2ASzQy1CuxVA1my8vB1VesGDxWO0Xv8HmfqKiloGSMVpxSVfwH5SNZ9xZeKu/exec';
       let masterData = [];
-      let videoStream = null;
-      let barcodeDetector = null;
-      let isScanning = false;
+      let html5QrCode = null;
       let lastResult = null;
       let lastTime = 0;
-
-      if ('BarcodeDetector' in window) {
-        barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'] });
-      }
 
       function callGAS(action, data = {}) {
         const payload = { action: action, ...data };
@@ -177,42 +172,26 @@
         });
       }
 
-      async function startScanner() {
+      function startScanner() {
         document.getElementById('scanner-box').style.display = 'block';
-        if (!barcodeDetector) {
-          showToast('Trình duyệt chưa hỗ trợ! Vui lòng dùng Safari/Chrome bản mới nhất.', 'danger');
-          return;
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("reader-video");
         }
-        try {
-          videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-          let videoEl = document.getElementById('video-preview');
-          videoEl.srcObject = videoStream;
-          videoEl.play();
-          isScanning = true;
-          scanFrame();
-        } catch (err) {
-          showToast('Không mở được camera!', 'danger');
-        }
-      }
-
-      async function scanFrame() {
-        if (!isScanning) return;
-        let videoEl = document.getElementById('video-preview');
-        if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
-          try {
-            let barcodes = await barcodeDetector.detect(videoEl);
-            if (barcodes.length > 0) {
-              let decodedText = barcodes[0].rawValue;
-              let now = Date.now();
-              if (decodedText !== lastResult || (now - lastTime) >= 3000) {
-                lastResult = decodedText;
-                lastTime = now;
-                onScanSuccess(decodedText);
-              }
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 15, qrbox: { width: 250, height: 150 } },
+          (decodedText, decodedResult) => {
+            let now = Date.now();
+            if (decodedText !== lastResult || (now - lastTime) >= 3000) {
+              lastResult = decodedText;
+              lastTime = now;
+              onScanSuccess(decodedText);
             }
-          } catch (e) {}
-        }
-        requestAnimationFrame(scanFrame);
+          },
+          (errorMessage) => {}
+        ).catch((err) => {
+          showToast('Không mở được camera! Sếp nhớ cấp quyền nhé.', 'danger');
+        });
       }
 
       function onScanSuccess(decodedText) {
@@ -228,11 +207,15 @@
       }
 
       function stopScanner() {
-        isScanning = false;
-        if (videoStream) {
-          videoStream.getTracks().forEach(track => track.stop());
+        if (html5QrCode) {
+          html5QrCode.stop().then(() => {
+            document.getElementById('scanner-box').style.display = 'none';
+          }).catch(err => {
+            document.getElementById('scanner-box').style.display = 'none';
+          });
+        } else {
+          document.getElementById('scanner-box').style.display = 'none';
         }
-        document.getElementById('scanner-box').style.display = 'none';
       }
 
       function showTab(tab) {
