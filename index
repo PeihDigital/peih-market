@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Peih Market</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+      :root { --primary: #84c4a4; --primary-dark: #376a4a; --accent: #c68a6f; --bg-marble: #f5f5f5; --bg-dark: #203a2a; --danger: #e74c3c; --warning: #f1c40f; --warning-orange: #e67e22; } body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg-marble); color: var(--bg-dark); } .navbar { display: flex; justify-content: space-around; position: fixed; bottom: 0; width: 100%; background: rgba(132, 196, 164, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 15px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; } .nav-item { cursor: pointer; font-size: 14px; font-weight: 500; color: #95a5a6; display: flex; flex-direction: column; align-items: center; } .nav-item.active { color: var(--primary-dark); font-weight: 700; border-bottom: 2px solid var(--primary-dark); padding-bottom: 5px; } .container { padding: 20px; padding-bottom: 80px; } .card { background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid rgba(132, 196, 164, 0.2); } .item-card { display: flex; justify-content: space-between; align-items: center; } .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; } .btn-primary { background: var(--primary); color: white; } .btn-accent { background: var(--accent); color: white; } .price-tag { font-size: 12px; color: var(--primary-dark); border: 1px solid var(--primary-dark); padding: 2px 6px; border-radius: 4px; margin-left: 5px; } input[type="text"], input[type="date"] { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid rgba(132, 196, 164, 0.5); background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(3px); font-size: 16px; outline:none; color: var(--bg-dark); font-family: inherit; } #toast-msg { padding: 12px 20px; border-radius: 8px; font-weight: bold; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 80%; z-index: 2000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); text-align: center; color: white; } .header-logo { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; padding: 10px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(5px); border-radius: 12px; } .header-title { color: var(--primary-dark); font-weight: 700; font-size: 24px; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="container">
+        <div class="header-logo">
+          <h2 class="header-title">Peih Market</h2>
+        </div>
+        <div id="content">
+          <div class="card" style="justify-content:center;">Đang kết nối hệ thống...</div>
+        </div>
+      </div>
+      
+      <nav class="navbar">
+        <div class="nav-item active" onclick="showTab('list')">Lên List</div>
+        <div class="nav-item" onclick="showTab('shop')">Đi Chợ</div>
+        <div class="nav-item" onclick="showTab('inventory')">Quản Lý</div>
+      </nav>
+    </div>
+
+    <script>
+      // 1. Cấu hình trạm API
+      const API_URL = 'https://script.google.com/macros/s/AKfycbz87dwQ2ASzQy1CuxVA1my8vB1VesGDxWO0Xv8HmfqKiloGSMVpxSVfwH5SNZ9xZeKu/exec';
+      
+      function callGAS(action, data = {}) {
+        const payload = { action: action, ...data };
+        return fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        }).then(response => response.json());
+      }
+
+      // 2. Tiện ích dùng chung
+      let masterData = [];
+      let scanner = null;
+
+      function showToast(msg, type = 'success') {
+        let bgColor = type === 'success' ? '#84c4a4' : (type === 'danger' ? '#e74c3c' : '#c68a6f');
+        let noti = document.createElement('div');
+        noti.id = 'toast-msg';
+        noti.style.background = bgColor;
+        noti.innerText = msg;
+        document.body.appendChild(noti);
+        setTimeout(() => noti.remove(), 2500);
+      }
+
+      // 3. Logic Tab Lên List
+      function loadMasterData() {
+        document.getElementById('content').innerHTML = '<div class="card" style="justify-content:center;">Đang tải danh mục có sẵn...</div>';
+        callGAS('getSheetData', { sheetName: 'MasterData' }).then(renderListTab);
+      }
+
+      function renderListTab(data) {
+        masterData = data;
+        let html = '<div style="margin-bottom:15px; display:flex; gap:10px;"><input type="text" id="searchInput" placeholder="Tìm món nhanh..." onkeyup="searchItem()"><button class="btn btn-accent" onclick="startScanner()" style="padding:12px; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3M17 4h3v3M4 17v3h3M17 20h3v-3M9 12h6"/></svg></button></div><div id="reader" style="width:100%; display:none; margin-bottom:15px; border-radius:8px; overflow:hidden;"></div>';
+        
+        data.forEach(item => {
+          html += `<div class="card item-card">
+            <div>
+              <div style="font-weight:600; font-size:16px;">${item.ItemName}</div>
+              <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">${item.Store} - <span class="price-tag">${item.Price}¥</span> (Thuế: ${item.TaxRate * 100}%)</div>
+            </div>
+            <button class="btn btn-primary" onclick="addToList('${item.ItemName}')" style="font-size:18px; padding:6px 14px;">+</button>
+          </div>`;
+        });
+        document.getElementById('content').innerHTML = html;
+      }
+
+      function searchItem() {
+        let keyword = document.getElementById('searchInput').value.toLowerCase();
+        let cards = document.querySelectorAll('.item-card');
+        cards.forEach(card => {
+          let text = card.innerText.toLowerCase();
+          card.style.display = text.includes(keyword) ? "flex" : "none";
+        });
+      }
+
+      function addToList(itemName) {
+        showToast('Đang đẩy ' + itemName + ' vào giỏ...', 'accent');
+        callGAS('saveToShoppingList', { itemName: itemName }).then(function() {
+          showToast('Đã thêm ' + itemName + ' thành công!', 'success');
+        });
+      }
+
+      // 4. Logic Tab Đi Chợ
+      function loadShoppingData() {
+        document.getElementById('content').innerHTML = '<div class="card" style="justify-content:center;">Đang tải danh sách đi chợ...</div>';
+        callGAS('getSheetData', { sheetName: 'ShoppingList' }).then(renderShopTab);
+      }
+
+      function renderShopTab(data) {
+        let html = '<h3 style="margin-top:0; color:var(--primary-dark);">Danh sách cần mua</h3>';
+        let hasItem = false;
+        data.forEach(item => {
+          if(item.Status === 'Pending') {
+            hasItem = true;
+            html += `<div class="card item-card" style="border-left:4px solid var(--primary-dark);">
+              <div style="font-weight:600;">${item.ItemName} <span style="font-size:12px; color:#7f8c8d;">(SL: ${item.Qty})</span></div>
+              <button class="btn btn-primary" onclick="buyItem('${item.ItemName}')" style="padding:8px 12px; font-size:14px;">Đã Mua</button>
+            </div>`;
+          }
+        });
+        if(!hasItem) html += '<div class="card" style="text-align:center; color:#7f8c8d; justify-content:center;">Danh sách trống. Sếp đã mua hết đồ rồi!</div>';
+        document.getElementById('content').innerHTML = html;
+      }
+
+      function buyItem(itemName) {
+        let btn = event.currentTarget;
+        btn.innerText = "Đang xử lý..."; btn.disabled = true;
+        callGAS('markAsBought', { itemName: itemName }).then(function() {
+          loadShoppingData();
+        });
+      }
+
+      // 5. Logic Tab Quản Lý Tủ Lạnh
+      function loadInventoryData() {
+        document.getElementById('content').innerHTML = '<div class="card" style="justify-content:center;">Đang mở tủ lạnh...</div>';
+        callGAS('getSheetData', { sheetName: 'Inventory' }).then(renderInventoryTab);
+      }
+
+      function renderInventoryTab(data) {
+        let html = '<h3 style="margin-top:0; color:var(--primary-dark);">Đồ đang có ở nhà</h3>';
+        if (data.length === 0) {
+          html += '<div class="card" style="text-align:center; color:#7f8c8d; justify-content:center;">Tủ lạnh trống trơn. Sếp lên list đi chợ thôi!</div>';
+        } else {
+          let today = new Date();
+          data.forEach(item => {
+            let expColor = 'var(--primary-dark)';
+            let expText = item.ExpiryDate || '';
+            if(expText) {
+              let expD = new Date(expText);
+              let diffDays = Math.ceil((expD - today) / (1000 * 60 * 60 * 24));
+              if(diffDays <= 2) expColor = 'var(--danger)';
+              else if(diffDays <= 5) expColor = 'var(--warning-orange)';
+            }
+            html += `<div class="card item-card" style="border-left:4px solid ${expColor};">
+              <div>
+                <div style="font-weight:600;">${item.ItemName} <span style="font-size:12px; color:#7f8c8d;">(SL: ${item.Qty})</span></div>
+                <div style="font-size:12px; color:#95a5a6; margin-top:4px;">HSD: <input type="date" value="${expText}" onchange="saveExpiry('${item.ItemName}', this.value)"></div>
+              </div>
+              <button class="btn btn-primary" onclick="useItem('${item.ItemName}')" style="background:var(--danger); padding:8px 12px; font-size:14px;">Dùng hết</button>
+            </div>`;
+          });
+        }
+        document.getElementById('content').innerHTML = html;
+      }
+
+      function saveExpiry(itemName, dateStr) {
+        callGAS('updateExpiryDate', { itemName: itemName, dateStr: dateStr });
+      }
+
+      function useItem(itemName) {
+        let btn = event.currentTarget;
+        btn.innerText = "Đang dọn..."; btn.disabled = true;
+        callGAS('consumeItem', { itemName: itemName }).then(function() {
+          loadInventoryData();
+        });
+      }
+
+      // 6. Quét Mã Vạch
+      function startScanner() {
+        document.getElementById('reader').style.display = 'block';
+        if (!scanner) {
+          scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+          scanner.render(onScanSuccess, onScanFailure);
+        }
+      }
+
+      function onScanSuccess(decodedText, decodedResult) {
+        scanner.clear();
+        document.getElementById('reader').style.display = 'none';
+        scanner = null;
+        
+        showToast('Đang dò mã: ' + decodedText, 'accent');
+        
+        callGAS('addByBarcode', { barcode: decodedText }).then(function(res) {
+          if(res.success) {
+            showToast('Đã thêm ' + res.name + ' vào giỏ!', 'success');
+          } else {
+            showToast('Mã chưa có trong Database!', 'danger');
+          }
+        });
+      }
+
+      function onScanFailure(error) {}
+
+      // 7. Chuyển Tab và Khởi chạy
+      function showTab(tab) {
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        if (tab === 'list') { loadMasterData(); } 
+        else if (tab === 'shop') { loadShoppingData(); } 
+        else if (tab === 'inventory') { loadInventoryData(); }
+      }
+
+      window.onload = loadMasterData;
+    </script>
+  </body>
+</html>
